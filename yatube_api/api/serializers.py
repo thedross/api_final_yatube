@@ -1,10 +1,7 @@
-from django.contrib.auth import get_user_model
 from rest_framework import serializers
 from rest_framework.relations import SlugRelatedField
 
-from posts.models import Comment, Group, Follow, Post
-
-User = get_user_model()
+from posts.models import Comment, Follow, Group, Post, User
 
 
 class PostSerializer(serializers.ModelSerializer):
@@ -30,7 +27,7 @@ class CommentSerializer(serializers.ModelSerializer):
     class Meta:
         fields = '__all__'
         model = Comment
-        read_only_fields = ('post', 'created')
+        read_only_fields = ('post',)
 
 
 class FollowSerializer(serializers.ModelSerializer):
@@ -46,20 +43,9 @@ class FollowSerializer(serializers.ModelSerializer):
         slug_field='username'
     )
 
-    def validate(self, data):
-        user = self.context['request'].user
-        follower = data['following']
-        if user == follower:
-            raise serializers.ValidationError(
-                'Follow himself prohibited'
-            )
-        return data
-
     class Meta:
         model = Follow
         fields = ('user', 'following')
-        # Проверяет существует ли уже такая подписка на пользователя
-
         validators = [
             serializers.UniqueTogetherValidator(
                 queryset=Follow.objects.all(),
@@ -67,3 +53,12 @@ class FollowSerializer(serializers.ModelSerializer):
                 message='Такая подписка уже существует'
             )
         ]
+
+    def validate_following(self, value):
+        user = self.context['request'].user
+        author = User.objects.get(username=value)
+        if user == author:
+            raise serializers.ValidationError(
+                'Selffollowing prohibited'
+            )
+        return value

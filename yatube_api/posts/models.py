@@ -26,6 +26,9 @@ class Post(models.Model):
         related_name='posts', blank=True, null=True
     )
 
+    class Meta:
+        ordering = ('pk',)
+
     def __str__(self):
         return self.text[:settings.AMOUNT_OF_SYMBOLS]
 
@@ -58,6 +61,16 @@ class Follow(models.Model):
     class Meta:
         verbose_name = 'Подписка'
         verbose_name_plural = 'Подписки'
+        constraints = [
+            models.UniqueConstraint(
+                name="%(app_label)s_%(class)s_unique_relationships",
+                fields=["user", "following"],
+            ),
+            models.CheckConstraint(
+                name="%(app_label)s_%(class)s_prevent_self_follow",
+                check=~models.Q(user=models.F("following")),
+            ),
+        ]
 
     def __str__(self) -> str:
-        return f'{self.user.username} подписан на {self.author.username}'
+        return f'{self.user.username} подписан на {self.following.username}'
