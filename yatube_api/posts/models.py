@@ -27,7 +27,7 @@ class Post(models.Model):
     )
 
     class Meta:
-        ordering = ('pk',)
+        ordering = ('author', '-pub_date')
 
     def __str__(self):
         return self.text[:settings.AMOUNT_OF_SYMBOLS]
@@ -63,11 +63,11 @@ class Follow(models.Model):
         verbose_name_plural = 'Подписки'
         constraints = [
             models.UniqueConstraint(
-                name="%(app_label)s_%(class)s_unique_relationships",
+                name='%(app_label)s_%(class)s_unique_relationships',
                 fields=["user", "following"],
             ),
             models.CheckConstraint(
-                name="%(app_label)s_%(class)s_prevent_self_follow",
+                name='%(app_label)s_%(class)s_prevent_self_follow',
                 check=~models.Q(user=models.F("following")),
             ),
         ]

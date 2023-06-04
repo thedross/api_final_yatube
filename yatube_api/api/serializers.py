@@ -56,9 +56,22 @@ class FollowSerializer(serializers.ModelSerializer):
 
     def validate_following(self, value):
         user = self.context['request'].user
-        author = User.objects.get(username=value)
-        if user == author:
+        if user == User.objects.get(username=value):
             raise serializers.ValidationError(
                 'Selffollowing prohibited'
             )
         return value
+
+# А вот так не работает. На самом деле до конца не понимаю, почему,
+# Но pytest не проходит с вариантом ниже.
+
+
+'''
+def validate_following(self, value):
+        user = self.context['request'].user
+        if user.username == value:
+            raise serializers.ValidationError(
+                'Selffollowing prohibited'
+            )
+        return value
+'''
